@@ -5,7 +5,7 @@
 # ===========================================================
 
 root_dir=${PWD}
-files_dir=$root_dir/workspaces-to-dock@passingthru67.gmail.com
+files_dir=$root_dir/workspaces-to-dock@remi.cohenscali.net
 output=$root_dir/po/en_US.txt
 cd "$files_dir/"
 xgettext -o "$output" *.js

@@ -1,40 +1,30 @@
 #!/bin/bash
 # usage: build_release [OPTION]
 # creates zip in attic/releases/master/<version_number>
-# <version_number> found in metadata.json
+# <version_number> if not provided, found in workspaces-to-dock@remi.cohenscali.net/metadata.json
 #
 # options:
 #     -d creates zip in root
 #
 
+# Activate pattern matching
+shopt -s extglob
+
 APPLICATION="${0##*/}"
-USAGE="$APPLICATION [options] version_number
+USAGE="Usage: $APPLICATION [-d] [-f] [version_number]
 
 Builds the installation zip for release and copies it into the releases folder.
+If version_number not provided, this script uses the one provided in metadata.json.
 Options:
     -d      Zip file will be copied into the development branch instead of the releases folder.
+    -f	    Force overwrite of zip
 "
 
-## Verify argument for version_number exists
-#if [ $# -lt 1 ] ;
-#then
-    #echo "Cannot build without a release number. Replace <version_number> with an integer value."
-    #echo ""
-    #echo "$USAGE"
-    #exit 1
-#fi
-
-## Test to verify argument is integer
-#if [[ $1 != [0-9]* ]];
-#then
-    #echo "$USAGE"
-    #exit 1
-#fi
-
 # Process options
-while getopts "d" flag; do
+while getopts "df" flag; do
     case "$flag" in
         d) DEV='y';;
+	f) OVERWRITE='y';;
         *) echo "$USAGE"; exit 1;;
     esac
 done
@@ -43,7 +33,7 @@ shift $((OPTIND-1))
 # Set directory variables
 #root_dir=~/.local/share/gnome-shell/extensions/workspaces-to-dock
 root_dir=${PWD}
-files_dir=$root_dir/workspaces-to-dock@passingthru67.gmail.com
+files_dir=$root_dir/workspaces-to-dock@remi.cohenscali.net
 temp_dir=$root_dir/attic/releases/build
 
 # Create temp directory
@@ -74,11 +64,32 @@ cp -R locale/ "$temp_dir/"
 
 # Create release zip
 cd "$temp_dir/"
-zip -r workspaces-to-dock@passingthru67.gmail.com.zip *
+zip -rq workspaces-to-dock@remi.cohenscali.net.zip *
+
+## Verify if argument for version_number exists
+version_number_arg_exists=0
+if test $# -ge 1;
+then
+    version_number_arg_exists=1
+fi
+
+## Test to verify argument is integer
+version_number=$(grep \"version\": metadata.json | awk '{print $2}')
+if test $version_number_arg_exists -eq 1; 
+then
+    if [[ -n "$1" && $1 != [0-9][0-9]* ]];
+    then
+	echo -e "Error: Invalid version number '$1' !\n"
+	echo "$USAGE"
+	# Cleanup - remove temp directory
+	cd - >/dev/null
+	rm -Rf "$temp_dir"
+	exit 1
+    fi
+fi
 
 # Set release_dir based on development option and metadata version number
-version_number=$(grep \"version\": metadata.json | awk '{print $2}')
-if [ -z "$DEV" ];
+if test -z "$DEV";
 then
     release_dir=$root_dir/attic/releases/master/$version_number
 else
@@ -86,15 +97,16 @@ else
 fi
 
 # Delete and recreate release directory
-if [ -z "$DEV" ];
+if test -z "$DEV";
 then
     rm -Rf "$release_dir"
     mkdir -p "$release_dir"
 fi
 
 # Copy zip file to release directory
-cp workspaces-to-dock@passingthru67.gmail.com.zip "$release_dir/"
+cp workspaces-to-dock@remi.cohenscali.net.zip "$release_dir/"
 
 # Cleanup - remove temp directory
+cd - >/dev/null
 rm -Rf "$temp_dir"
-echo "Build completed."
+echo "Release $version_number build completed."
