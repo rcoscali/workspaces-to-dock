@@ -1,8 +1,7 @@
 {
     "name": "Workspaces to Dock",
     "description": "Transform Gnome Shell's overview workspaces into an intelligent dock.",
-    "original-author": "passingthru67@gmail.com",
-    "author": "remi@cohenscali.net",
+    "original-author": "remi@cohenscali.net",
     "shell-version": ["3.38"],
     "url": "https://github.com/rcoscali/workspaces-to-dock",
     "uuid": "workspaces-to-dock@remi.cohenscali.net",
