@@ -88,6 +88,21 @@ then
     fi
 fi
 
+# Check release file do not exists
+if test -z "$OVERWRITE";
+then
+   if test \( -z "$DEV" -a -f $root_dir/attic/releases/master/$version_number/workspaces-to-dock@remi.cohenscali.net.zip \) -o \( -n "$DEV" -a -f $root_dir/workspaces-to-dock@remi.cohenscali.net.zip \);
+   then
+       echo -e "Error: Release file already exists... use '-f' to overwrite !\n"
+       echo "$USAGE"
+       # Cleanup - remove temp directory
+       cd - >/dev/null
+       rm -Rf "$temp_dir"
+       exit 1
+   fi
+fi
+
+
 # Set release_dir based on development option and metadata version number
 if test -z "$DEV";
 then
