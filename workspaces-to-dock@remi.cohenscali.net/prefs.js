@@ -13,7 +13,8 @@ const Gtk = imports.gi.Gtk;
 const Gdk = imports.gi.Gdk;
 const Lang = imports.lang;
 
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+const ExtensionUtils = imports.misc.extensionUtils;
+const Me = ExtensionUtils.getCurrentExtension();
 const Convenience = Me.imports.convenience;
 
 const Gettext = imports.gettext.domain(Me.metadata['gettext-domain']);
@@ -28,7 +29,8 @@ const WorkspacesToDockPreferencesWidget = new GObject.Class({
     _init: function(params) {
         let self = this;
         this.parent(params);
-        this.settings = Convenience.getSettings('org.gnome.shell.extensions.workspaces-to-dock');
+        this.settings = Convenience.getSettings('org.gnome.shell.extensions.workspaces-to-dock') \
+	    || ExtensionUtils.getSettings('org.gnome.shell.extensions.workspaces-to-dock');
         this._rtl = Gtk.Widget.get_default_direction() == Gtk.TextDirection.RTL;
 
         let notebook = new Gtk.Notebook();
@@ -121,23 +123,27 @@ const WorkspacesToDockPreferencesWidget = new GObject.Class({
 
             if (Gtk.Widget.get_default_direction() == Gtk.TextDirection.RTL) {
                 dockPositionCombo.append_text(_("Left"));
-            } else {
-                dockPositionCombo.append_text(_("Right"));
-            }
-
-            dockPositionCombo.append_text(_("Bottom"));
-
-            if (Gtk.Widget.get_default_direction() == Gtk.TextDirection.RTL) {
+		dockPositionCombo.append_text(_("Bottom"));
                 dockPositionCombo.append_text(_("Right"));
             } else {
+                dockPositionCombo.append_text(_("Right"));
+		dockPositionCombo.append_text(_("Bottom"));
                 dockPositionCombo.append_text(_("Left"));
             }
 
-        let position = this.settings.get_enum('dock-position');
-        dockPositionCombo.set_active(position);
-        dockPositionCombo.connect('changed', Lang.bind (this, function(widget) {
-                this.settings.set_enum('dock-position', widget.get_active());
-        }));
+
+	/* Activate and bind */
+        dockPositionCombo.set_active(this.settings.get_enum('dock-position'));
+        dockPositionCombo.connect('changed',
+				  Lang.bind (this,
+					     function(widget)
+					     {
+						 let position = widget.get_active();
+						 log('position value: ' + position);
+						 this.settings.set_enum('dock-position', position);
+					     }
+					    )
+				 );
 
         let hideDashButton = new Gtk.CheckButton({
             label: _("Hide the Gnome Shell Dash"),
